@@ -16,7 +16,13 @@ func (handler *TelegramBotHandler) ParseRequest(next http.HandlerFunc) http.Hand
 		update := new(entity.Update)
 		err := json.NewDecoder(r.Body).Decode(update)
 		if err != nil {
-			handler.logger.LogFileError(fmt.Sprintf("Unable to parse update, %s", err.Error()), entity.BotLogFile)
+			if handler.botLog != nil {
+				if handler.debug {
+					handler.botLog.Logger.LogToParent(fmt.Sprintf("Unable to parse update, %s", err.Error()), "e")
+				} else {
+					handler.botLog.Logger.LogFileError(fmt.Sprintf("Unable to parse update, %s", err.Error()), handler.botLog.BotLogFile)
+				}
+			}
 			return
 		}
 

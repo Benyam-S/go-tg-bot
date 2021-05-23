@@ -1,4 +1,4 @@
-package tools
+package handler
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 )
 
 // SendReplyToTelegramChat sends a reply to the Telegram chat identified by its chat Id
-func SendReplyToTelegramChat(chatID int64, reply ...string) (string, error) {
+func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID int64, reply ...string) (string, error) {
 
 	text := ""
 	replyMarkup := ""
@@ -49,7 +49,7 @@ func SendReplyToTelegramChat(chatID int64, reply ...string) (string, error) {
 }
 
 // SendDocumentToTelegramChat sends a document to the Telegram chat identified by its chat Id
-func SendDocumentToTelegramChat(chatID int64, fileID string, reply ...string) (string, error) {
+func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID int64, fileID string, reply ...string) (string, error) {
 
 	caption := ""
 	replyMarkup := ""
@@ -87,7 +87,7 @@ func SendDocumentToTelegramChat(chatID int64, fileID string, reply ...string) (s
 }
 
 // PostToTelegramChannel posts a certain content to a telegram channel
-func PostToTelegramChannel(post ...string) (string, error) {
+func (handler *TelegramBotHandler) PostToTelegramChannel(post ...string) (string, error) {
 
 	text := ""
 	replyMarkup := ""
@@ -124,7 +124,7 @@ func PostToTelegramChannel(post ...string) (string, error) {
 }
 
 // AnswerToTelegramCallBack sends a reply to the Telegram call back request identified by the query id
-func AnswerToTelegramCallBack(queryID string, text string) (string, error) {
+func (handler *TelegramBotHandler) AnswerToTelegramCallBack(queryID string, text string) (string, error) {
 
 	var telegramAPI string = os.Getenv("api_access_point") + os.Getenv("bot_api_token") + "/answerCallbackQuery"
 	response, err := http.PostForm(
@@ -148,7 +148,7 @@ func AnswerToTelegramCallBack(queryID string, text string) (string, error) {
 }
 
 // CreateReplyKeyboard is a function that creates a reply keyboard from set of parameters
-func CreateReplyKeyboard(resizeKeyboard, oneTimeKeyboard bool, keyboardButtons ...[]string) string {
+func (handler *TelegramBotHandler) CreateReplyKeyboard(resizeKeyboard, oneTimeKeyboard bool, keyboardButtons ...[]string) string {
 
 	buttonRows := make([][]*entity.ReplyKeyboardButton, 0)
 
@@ -175,7 +175,7 @@ func CreateReplyKeyboard(resizeKeyboard, oneTimeKeyboard bool, keyboardButtons .
 }
 
 // CreateReplyKeyboardWExtra is a function that creates a reply keyboard from set of parameters with extra capabilities
-func CreateReplyKeyboardWExtra(resizeKeyboard, oneTimeKeyboard bool, keyboardButtons ...[]entity.ReplyKeyboardButton) string {
+func (handler *TelegramBotHandler) CreateReplyKeyboardWExtra(resizeKeyboard, oneTimeKeyboard bool, keyboardButtons ...[]entity.ReplyKeyboardButton) string {
 
 	buttonRows := make([][]*entity.ReplyKeyboardButton, 0)
 
@@ -203,7 +203,7 @@ func CreateReplyKeyboardWExtra(resizeKeyboard, oneTimeKeyboard bool, keyboardBut
 }
 
 // CreateInlineKeyboard is a function that creates an inline keyboard from set of parameters for a chat
-func CreateInlineKeyboard(keyboardButtons ...[]entity.InlineKeyboardButton) string {
+func (handler *TelegramBotHandler) CreateInlineKeyboard(keyboardButtons ...[]entity.InlineKeyboardButton) string {
 
 	buttonRows := make([][]*entity.InlineKeyboardButton, 0)
 

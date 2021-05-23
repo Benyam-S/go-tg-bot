@@ -4,24 +4,26 @@ import (
 	"fmt"
 	"os"
 	"time"
-
-	"github.com/Benyam-S/go-tg-bot/entity"
 )
 
-// Logger is a type that defines a logger type
-type Logger struct {
+type ILogger interface {
+	Log(stmt, stmtType, logFile string)
+	LogToParent(stmt, stmtType string)
+	LogFileError(stmt, logFile string)
+}
+
+// LogBug is a type that defines a log bug that contains the log files location
+type LogBug struct {
 	ServerLogFile string
 	BotLogFile    string
+	Logger        ILogger
 }
+
+// Logger is a type that defines a logger type
+type Logger struct{}
 
 // Log is a method that will log the given statement to the selected log file
 func (l *Logger) Log(stmt, stmtType, logFile string) {
-
-	if logFile == entity.BotLogFile {
-		logFile = l.BotLogFile
-	} else {
-		logFile = l.ServerLogFile
-	}
 
 	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err == nil {
@@ -62,12 +64,6 @@ func (l *Logger) LogToParent(stmt, stmtType string) {
 
 // LogFileError is a method that will log the given statement as an error to the selected log file
 func (l *Logger) LogFileError(stmt, logFile string) {
-
-	if logFile == entity.BotLogFile {
-		logFile = l.BotLogFile
-	} else {
-		logFile = l.ServerLogFile
-	}
 
 	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err == nil {
