@@ -3,41 +3,59 @@ package log
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 )
 
-type ILogger interface {
-	Log(stmt, stmtType, logFile string)
-	LogToParent(stmt, stmtType string)
-	LogFileError(stmt, logFile string)
+// Logger is a type that defines the logger
+type Logger struct {
+	mu   sync.Mutex
+	Logs *LogContainer
+	flag bool // Can define that state of the logger wheather to log or not
 }
 
-// LogBug is a type that defines a log bug that contains the log files location
-type LogBug struct {
-	ServerLogFile string
-	BotLogFile    string
-	Logger        ILogger
+// NewLogger is a function that returns a new logger
+// By default the returned logger flag is false
+func NewLogger(logContainer *LogContainer) *Logger {
+	return &Logger{Logs: logContainer}
 }
 
-// Logger is a type that defines a logger type
-type Logger struct{}
+// SetFlag is a method that set the logger's flag to given state
+func (l *Logger) SetFlag(state bool) {
+	l.flag = state
+}
 
 // Log is a method that will log the given statement to the selected log file
-func (l *Logger) Log(stmt, stmtType, logFile string) {
+func (l *Logger) Log(stmt, logFile string) {
+
+	// Checking the status of the logger
+	if !l.flag {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	var isValidLogFile bool
+
+	// Checking the validity of the given log file
+	validLogFiles := []string{l.Logs.ServerLogFile, l.Logs.BotLogFile, l.Logs.ErrorLogFile}
+
+	for _, validLogFile := range validLogFiles {
+		if validLogFile == logFile {
+			isValidLogFile = true
+		}
+	}
+
+	if !isValidLogFile {
+		logFile = l.Logs.ServerLogFile
+	}
 
 	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err == nil {
 		defer file.Close()
 
-		if stmtType == "w" {
-			stmtType = "Warning:"
-
-		} else if stmtType == "e" {
-			stmtType = "Error:"
-
-		}
-
-		stmt = fmt.Sprintf("%s %s  At %s", stmtType, stmt, time.Now())
+		stmt = fmt.Sprintf("[ %s ] %s", time.Now(), stmt)
 
 		fmt.Fprintln(file, stmt)
 
@@ -46,6 +64,14 @@ func (l *Logger) Log(stmt, stmtType, logFile string) {
 
 // LogToParent is a method that will log the given statement to the program starter
 func (l *Logger) LogToParent(stmt, stmtType string) {
+
+	// Checking the status of the logger
+	if !l.flag {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if stmtType == "w" {
 		stmtType = "Warning:"
@@ -58,18 +84,48 @@ func (l *Logger) LogToParent(stmt, stmtType string) {
 
 	}
 
-	stmt = fmt.Sprintf("%s %s", stmtType, stmt)
+	stmt = fmt.Sprintf("[ %s ] %s: %s", time.Now(), stmtType, stmt)
 	fmt.Println(stmt)
 }
 
-// LogFileError is a method that will log the given statement as an error to the selected log file
-func (l *Logger) LogFileError(stmt, logFile string) {
+// LogFileError is a method that will log the given statement as an error to the error log file
+func (l *Logger) LogFileError(stmt string) {
 
-	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0644)
+	// Checking the status of the logger
+	if !l.flag {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	file, err := os.OpenFile(l.Logs.ErrorLogFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err == nil {
 		defer file.Close()
 
-		stmt = fmt.Sprintf("Error: %s  At %s", stmt, time.Now())
+		stmt = fmt.Sprintf("[ %s ] Error: %s", time.Now(), stmt)
+
+		fmt.Fprintln(file, stmt)
+
+	}
+}
+
+// LogFileArchive is a method that will log the given statement to archive log file
+func (l *Logger) LogFileArchive(stmt string) {
+
+	// Checking the status of the logger
+	if !l.flag {
+		return
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	file, err := os.OpenFile(l.Logs.ArchiveLogFile, os.O_APPEND|os.O_WRONLY, 0644)
+	if err == nil {
+		defer file.Close()
+
+		stmt = fmt.Sprintf("[ %s ] %s", time.Now(), stmt)
 
 		fmt.Fprintln(file, stmt)
 
