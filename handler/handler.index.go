@@ -6,8 +6,11 @@ import (
 
 // TelegramBotHandler is a struct that defines a telegram bot handler
 type TelegramBotHandler struct {
-	debug  bool
-	botLog *log.LogBug
+	BotAPIAccessPoint string
+	BotAccessToken    string
+	ChannelName       string
+	logger            log.ILogger
+	logs              *log.LogContainer // logs can never be nil
 }
 
 // BotResponse is a type that defines a bot response message
@@ -17,11 +20,22 @@ type BotResponse struct {
 }
 
 // NewTelegramBotHandler is a function that returns a new telegram bot handler
-func NewTelegramBotHandler(debugMode bool, botLog *log.LogBug) *TelegramBotHandler {
-	if debugMode && botLog == nil {
-		botLog = &log.LogBug{
-			Logger: &log.Logger{},
+func NewTelegramBotHandler(botAPIAccessPoint string, botAccessToken string, telegramChannelName string,
+	botLogger log.ILogger, botLogs *log.LogContainer) *TelegramBotHandler {
+	return &TelegramBotHandler{BotAPIAccessPoint: botAPIAccessPoint, BotAccessToken: botAccessToken,
+		ChannelName: telegramChannelName, logger: botLogger, logs: botLogs}
+}
+
+// Logging is a method that will be used internally for making logging efficient
+func (handler *TelegramBotHandler) Logging(stmt, logFile string) {
+	if handler.logger != nil {
+		if handler.logs != nil {
+			if logFile == log.ErrorLogFile {
+				logFile = handler.logs.ErrorLogFile
+			} else {
+				logFile = handler.logs.BotLogFile
+			}
 		}
+		handler.logger.Log(stmt, logFile)
 	}
-	return &TelegramBotHandler{debug: debugMode, botLog: botLog}
 }

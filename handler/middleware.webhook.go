@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Benyam-S/go-tg-bot/entity"
+	"github.com/Benyam-S/go-tg-bot/log"
 )
 
 // ParseRequest is a middleware that parse an incoming request update value
@@ -16,13 +17,9 @@ func (handler *TelegramBotHandler) ParseRequest(next http.HandlerFunc) http.Hand
 		update := new(entity.Update)
 		err := json.NewDecoder(r.Body).Decode(update)
 		if err != nil {
-			if handler.botLog != nil {
-				if handler.debug {
-					handler.botLog.Logger.LogToParent(fmt.Sprintf("Unable to parse update, %s", err.Error()), "e")
-				} else {
-					handler.botLog.Logger.LogFileError(fmt.Sprintf("Unable to parse update, %s", err.Error()), handler.botLog.BotLogFile)
-				}
-			}
+			handler.Logging(fmt.Sprintf("Error: Unable to parse update, %s", err.Error()),
+				log.ErrorLogFile)
+
 			return
 		}
 

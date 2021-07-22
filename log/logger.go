@@ -10,18 +10,22 @@ import (
 // Logger is a type that defines the logger
 type Logger struct {
 	mu   sync.Mutex
-	Logs *LogContainer
-	flag bool // Can define that state of the logger wheather to log or not
+	flag string // Can define that state of the logger wheather to log or not
 }
 
 // NewLogger is a function that returns a new logger
-// By default the returned logger flag is false
-func NewLogger(logContainer *LogContainer) *Logger {
-	return &Logger{Logs: logContainer}
+func NewLogger(flag string) *Logger {
+	logger := &Logger{}
+	logger.SetFlag(flag)
+	return logger
 }
 
 // SetFlag is a method that set the logger's flag to given state
-func (l *Logger) SetFlag(state bool) {
+func (l *Logger) SetFlag(state string) {
+	if state != Debug && state != Normal && state != None {
+		state = None
+	}
+
 	l.flag = state
 }
 
@@ -29,27 +33,15 @@ func (l *Logger) SetFlag(state bool) {
 func (l *Logger) Log(stmt, logFile string) {
 
 	// Checking the status of the logger
-	if !l.flag {
+	if l.flag == None {
+		return
+	} else if l.flag == Debug {
+		l.LogToParent(stmt)
 		return
 	}
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
-
-	var isValidLogFile bool
-
-	// Checking the validity of the given log file
-	validLogFiles := []string{l.Logs.ServerLogFile, l.Logs.BotLogFile, l.Logs.ErrorLogFile}
-
-	for _, validLogFile := range validLogFiles {
-		if validLogFile == logFile {
-			isValidLogFile = true
-		}
-	}
-
-	if !isValidLogFile {
-		logFile = l.Logs.ServerLogFile
-	}
 
 	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 0644)
 	if err == nil {
@@ -63,71 +55,13 @@ func (l *Logger) Log(stmt, logFile string) {
 }
 
 // LogToParent is a method that will log the given statement to the program starter
-func (l *Logger) LogToParent(stmt, stmtType string) {
+func (l *Logger) LogToParent(stmt string) {
 
 	// Checking the status of the logger
-	if !l.flag {
+	if l.flag == None {
 		return
 	}
 
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	if stmtType == "w" {
-		stmtType = "Warning:"
-
-	} else if stmtType == "e" {
-		stmtType = "Error:"
-
-	} else {
-		stmtType = "Success:"
-
-	}
-
-	stmt = fmt.Sprintf("[ %s ] %s: %s", time.Now(), stmtType, stmt)
+	stmt = fmt.Sprintf("[ %s ] %s", time.Now(), stmt)
 	fmt.Println(stmt)
-}
-
-// LogFileError is a method that will log the given statement as an error to the error log file
-func (l *Logger) LogFileError(stmt string) {
-
-	// Checking the status of the logger
-	if !l.flag {
-		return
-	}
-
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	file, err := os.OpenFile(l.Logs.ErrorLogFile, os.O_APPEND|os.O_WRONLY, 0644)
-	if err == nil {
-		defer file.Close()
-
-		stmt = fmt.Sprintf("[ %s ] Error: %s", time.Now(), stmt)
-
-		fmt.Fprintln(file, stmt)
-
-	}
-}
-
-// LogFileArchive is a method that will log the given statement to archive log file
-func (l *Logger) LogFileArchive(stmt string) {
-
-	// Checking the status of the logger
-	if !l.flag {
-		return
-	}
-
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	file, err := os.OpenFile(l.Logs.ArchiveLogFile, os.O_APPEND|os.O_WRONLY, 0644)
-	if err == nil {
-		defer file.Close()
-
-		stmt = fmt.Sprintf("[ %s ] %s", time.Now(), stmt)
-
-		fmt.Fprintln(file, stmt)
-
-	}
 }

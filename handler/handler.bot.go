@@ -2,13 +2,14 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 
 	"github.com/Benyam-S/go-tg-bot/entity"
+	"github.com/Benyam-S/go-tg-bot/log"
 )
 
 // SendReplyToTelegramChat sends a reply to the Telegram chat identified by its chat Id
@@ -25,7 +26,11 @@ func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID int64, reply .
 		replyMarkup = reply[1]
 	}
 
-	var telegramAPI string = os.Getenv("api_access_point") + os.Getenv("bot_api_token") + "/sendMessage"
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started sending replay to telegram chat { Chat ID : %d, Text : %s, Markup : %s }",
+		chatID, text, replyMarkup), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/sendMessage"
 	response, err := http.PostForm(
 		telegramAPI,
 		url.Values{
@@ -36,14 +41,26 @@ func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID int64, reply .
 		})
 
 	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending replay to telegram chat { Chat ID : %d, Text : %s, Markup : %s }, %s",
+			chatID, text, replyMarkup, err.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
-		return "", err
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending replay to telegram chat { Chat ID : %d, Text : %s, Markup : %s }, %s",
+			chatID, text, replyMarkup, errRead.Error()), log.ErrorLogFile)
+
+		return "", errRead
 	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished sending replay to telegram chat { Chat ID : %d, Text : %s, Markup : %s, Response : %s }",
+		chatID, text, replyMarkup, string(bodyBytes)), log.BotLogFile)
 
 	return string(bodyBytes), nil
 }
@@ -62,7 +79,11 @@ func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID int64, file
 		replyMarkup = reply[1]
 	}
 
-	var telegramAPI string = os.Getenv("api_access_point") + os.Getenv("bot_api_token") + "/sendDocument"
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started sending document to telegram chat { Chat ID : %d, File ID : %s, Caption : %s, Markup : %s }",
+		chatID, fileID, caption, replyMarkup), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/sendDocument"
 	response, err := http.PostForm(
 		telegramAPI,
 		url.Values{
@@ -74,14 +95,26 @@ func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID int64, file
 		})
 
 	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending document to telegram chat { Chat ID : %d, File ID : %s, Caption : %s, Markup : %s }, %s",
+			chatID, fileID, caption, replyMarkup, err.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending document to telegram chat { Chat ID : %d, File ID : %s, Caption : %s, Markup : %s }, %s",
+			chatID, fileID, caption, replyMarkup, errRead.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished sending document to telegram chat { Chat ID : %d, File ID : %s, Caption : %s, Markup : %s, Response : %s }",
+		chatID, fileID, caption, replyMarkup, string(bodyBytes)), log.BotLogFile)
 
 	return string(bodyBytes), nil
 }
@@ -100,25 +133,41 @@ func (handler *TelegramBotHandler) PostToTelegramChannel(post ...string) (string
 		replyMarkup = post[1]
 	}
 
-	var telegramAPI string = os.Getenv("api_access_point") + os.Getenv("bot_api_token") + "/sendMessage"
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started posting to telegram channel { Channel Name : %s, text : %s, Markup : %s }",
+		handler.ChannelName, text, replyMarkup), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/sendMessage"
 	response, err := http.PostForm(
 		telegramAPI,
 		url.Values{
-			"chat_id":      {os.Getenv("channel_name")},
+			"chat_id":      {handler.ChannelName},
 			"text":         {text},
 			"reply_markup": {replyMarkup},
 			"parse_mode":   {"html"},
 		})
 
 	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For posting to telegram channel { Channel Name : %s, text : %s, Markup : %s }, %s",
+			handler.ChannelName, text, replyMarkup, err.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For posting to telegram channel { Channel Name : %s, text : %s, Markup : %s }, %s",
+			handler.ChannelName, text, replyMarkup, errRead.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished posting to telegram channel { Channel Name : %s, text : %s, Markup : %s, Response : %s }",
+		handler.ChannelName, text, replyMarkup, string(bodyBytes)), log.BotLogFile)
 
 	return string(bodyBytes), nil
 }
@@ -126,7 +175,11 @@ func (handler *TelegramBotHandler) PostToTelegramChannel(post ...string) (string
 // AnswerToTelegramCallBack sends a reply to the Telegram call back request identified by the query id
 func (handler *TelegramBotHandler) AnswerToTelegramCallBack(queryID string, text string) (string, error) {
 
-	var telegramAPI string = os.Getenv("api_access_point") + os.Getenv("bot_api_token") + "/answerCallbackQuery"
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started answering to telegram callback { Query ID : %s, text : %s }",
+		queryID, text), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/answerCallbackQuery"
 	response, err := http.PostForm(
 		telegramAPI,
 		url.Values{
@@ -135,14 +188,26 @@ func (handler *TelegramBotHandler) AnswerToTelegramCallBack(queryID string, text
 		})
 
 	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For answering to telegram callback { Query ID : %s, text : %s }, %s",
+			queryID, text, err.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
 	defer response.Body.Close()
 
 	var bodyBytes, errRead = ioutil.ReadAll(response.Body)
 	if errRead != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For answering to telegram callback { Query ID : %s, text : %s }, %s",
+			queryID, text, errRead.Error()), log.ErrorLogFile)
+
 		return "", err
 	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished answering to telegram callback { Query ID : %s, text : %s, Response : %s }",
+		queryID, text, string(bodyBytes)), log.BotLogFile)
 
 	return string(bodyBytes), nil
 }
