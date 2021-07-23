@@ -27,7 +27,7 @@ func NewTelegramBotHandler(botAPIAccessPoint string, botAccessToken string, botU
 		BotURL: botURL, ChannelName: telegramChannelName, logger: botLogger, logs: botLogs}
 }
 
-// Logging is a method that will be used internally for making logging efficient
+// Logging is a method that will be internally used for making logging efficient
 func (handler *TelegramBotHandler) Logging(stmt, logFile string) {
 	if handler.logger != nil {
 		if handler.logs != nil {
