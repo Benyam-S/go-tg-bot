@@ -13,6 +13,7 @@ import (
 )
 
 // SendReplyToTelegramChat sends a reply to the Telegram chat identified by its chat Id
+// For removing the reply keyboard, use ReplyKeyboardRemove{RemoveKeyboard: true} object as 'reply' string
 func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID int64, reply ...string) (string, error) {
 
 	text := ""

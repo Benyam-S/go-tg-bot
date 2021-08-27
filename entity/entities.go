@@ -62,6 +62,12 @@ type ReplyKeyboardButton struct {
 	RequestContact bool   `json:"request_contact"`
 }
 
+// ReplyKeyboardRemove is a struct that represent a remove telegram reply keyboard command
+type ReplyKeyboardRemove struct {
+	RemoveKeyboard bool `json:"remove_keyboard"`
+	Selective      bool `json:"selective"`
+}
+
 // InlineKeyboardMarkup is a struct that represents an inline keyboard for a reply chat
 type InlineKeyboardMarkup struct {
 	InlineKeyboard [][]*InlineKeyboardButton `json:"inline_keyboard"`
@@ -73,9 +79,3 @@ type InlineKeyboardButton struct {
 	URL          string `json:"url"`
 	CallbackData string `json:"callback_data"`
 }
-
-// Key is a type that defines a key type that can be used a key value in context
-type Key string
-
-// ErrMap is a type that defines a map with string identifier and it's error
-type ErrMap map[string]error
