@@ -14,12 +14,6 @@ type TelegramBotHandler struct {
 	logs              *log.LogContainer // logs can never be nil
 }
 
-// BotResponse is a type that defines a bot response message
-type BotResponse struct {
-	Ok        bool  `json:"ok"`
-	ErrorCode int64 `json:"error_code"`
-}
-
 // NewTelegramBotHandler is a function that returns a new telegram bot handler
 func NewTelegramBotHandler(botAPIAccessPoint string, botAccessToken string, botURL string,
 	telegramChannelName string, botLogger log.ILogger, botLogs *log.LogContainer) *TelegramBotHandler {
