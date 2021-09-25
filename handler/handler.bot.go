@@ -144,7 +144,10 @@ func (handler *TelegramBotHandler) EditReplyToTelegramChat(text string,
 	var messageID int64
 	var disableWebPageView bool
 
-	if optionals != nil {
+	// If optionals are nil then set the default mode
+	if optionals == nil {
+		parseMode = "html"
+	} else {
 		if id, ok := optionals.ChatID.(int64); ok {
 			chatID = strconv.FormatInt(id, 10)
 		} else if id, ok := optionals.ChatID.(string); ok {
@@ -161,9 +164,15 @@ func (handler *TelegramBotHandler) EditReplyToTelegramChat(text string,
 			entities = string(entitiesByte)
 		}
 
+		// If parse mode is not provided set to 'html' by default
+		if optionals.ParseMode == "" {
+			parseMode = "html"
+		} else {
+			parseMode = optionals.ParseMode
+		}
+
 		messageID = optionals.MessageID
 		inlineMessageID = optionals.InlineMessageID
-		parseMode = optionals.ParseMode
 		replyMarkup = optionals.ReplyMarkup
 		disableWebPageView = optionals.DisableWebPageView
 	}
