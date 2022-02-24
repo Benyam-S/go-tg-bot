@@ -53,11 +53,11 @@ type Message struct {
 	ReplyMarkup           InlineKeyboardMarkup `json:"reply_markup"`
 	Entities              []*MessageEntity     `json:"entities"`
 	CaptionEntities       []*MessageEntity     `json:"caption_entities"`
-	// Animation                     Animation                     `json:"animation"`
+	Animation             Animation            `json:"animation"`
+	Video                 Video                `json:"video"`
 	// Audio                         Audio                         `json:"audio"`
 	// Photo                         []*PhotoSize                  `json:"photo"`
 	// Sticker                       Sticker                       `json:"sticker"`
-	// Video                         Video                         `json:"video"`
 	// VideoNote                     VideoNote                     `json:"video_note"`
 	// Voice                         Voice                         `json:"voice"`
 	// PinnedMessage         		 Message              		   `json:"pinned_message"`
@@ -142,6 +142,32 @@ type Document struct {
 	// Thumb        PhotoSize `json:"thumb"`
 }
 
+// Document is a Telegram Video object
+type Video struct {
+	FileID       string `json:"file_id"`
+	FileUniqueID string `json:"file_unique_id"`
+	Width        int64  `json:"width"`
+	Height       int64  `json:"height"`
+	Duration     int64  `json:"duration"`
+	FileName     string `json:"file_name"`
+	MIMEType     string `json:"mime_type"`
+	FileSize     int64  `json:"file_size"`
+	// Thumb        PhotoSize `json:"thumb"`
+}
+
+// Animation is a Telegram animation object
+type Animation struct {
+	FileID       string `json:"file_id"`
+	FileUniqueID string `json:"file_unique_id"`
+	Width        int64  `json:"width"`
+	Height       int64  `json:"height"`
+	Duration     int64  `json:"duration"`
+	FileName     string `json:"file_name"`
+	MIMEType     string `json:"mime_type"`
+	FileSize     int64  `json:"file_size"`
+	// Thumb        PhotoSize `json:"thumb"`
+}
+
 // Contact is a Telegram contact object
 type Contact struct {
 	PhoneNumber string `json:"phone_number"`
@@ -159,6 +185,66 @@ type MessageEntity struct {
 	URL      string `json:"url"`
 	User     User   `json:"user"`
 	Language string `json:"language"`
+}
+
+// InputMediaPhoto is a type that represents a photo to be sent
+type InputMediaPhoto struct {
+	Type            string           `json:"type"`
+	Media           string           `json:"media"`
+	Caption         string           `json:"caption"`
+	ParseMode       string           `json:"parse_mode"`
+	CaptionEntities []*MessageEntity `json:"caption_entities"`
+}
+
+// InputMediaVideo is a type that represents a video to be sent
+type InputMediaVideo struct {
+	Type            string           `json:"type"`
+	Media           string           `json:"media"`
+	Thumb           string           `json:"thumb"`
+	Caption         string           `json:"caption"`
+	ParseMode       string           `json:"parse_mode"`
+	CaptionEntities []*MessageEntity `json:"caption_entities"`
+	Width           int64            `json:"width"`
+	Height          int64            `json:"height"`
+	Duration        int64            `json:"duration"`
+	SupportsString  bool             `json:"supports_streaming"`
+}
+
+// InputMediaAnimation is a type that represents a animation to be sent
+type InputMediaAnimation struct {
+	Type            string           `json:"type"`
+	Media           string           `json:"media"`
+	Thumb           string           `json:"thumb"`
+	Caption         string           `json:"caption"`
+	ParseMode       string           `json:"parse_mode"`
+	CaptionEntities []*MessageEntity `json:"caption_entities"`
+	Width           int64            `json:"width"`
+	Height          int64            `json:"height"`
+	Duration        int64            `json:"duration"`
+}
+
+// InputMediaAudio is a type that represents a audio to be sent
+type InputMediaAudio struct {
+	Type            string           `json:"type"`
+	Media           string           `json:"media"`
+	Thumb           string           `json:"thumb"`
+	Caption         string           `json:"caption"`
+	ParseMode       string           `json:"parse_mode"`
+	CaptionEntities []*MessageEntity `json:"caption_entities"`
+	Duration        int64            `json:"duration"`
+	Performer       string           `json:"performer"`
+	Title           string           `json:"title"`
+}
+
+// InputMediaDocument is a type that represents a general file to be sent
+type InputMediaDocument struct {
+	Type                        string           `json:"type"`
+	Media                       string           `json:"media"`
+	Thumb                       string           `json:"thumb"`
+	Caption                     string           `json:"caption"`
+	ParseMode                   string           `json:"parse_mode"`
+	CaptionEntities             []*MessageEntity `json:"caption_entities"`
+	DisableContentTypeDetection bool             `json:"disable_content_type_detection"`
 }
 
 // Optional is a struct that holds all the optional values in one place
@@ -181,9 +267,13 @@ type Optional struct {
 	URL                         string
 	ShowAlert                   bool
 	CacheTime                   int64
+	Duration                    int64
+	Width                       int64
+	Height                      int64
+	ProtectContent              bool
 	Thumb                       string // Only string thumb supported
 	Caption                     string
-	CaptionEntities             []MessageEntity
+	CaptionEntities             []*MessageEntity
 	DisableContentTypeDetection bool
 }
 

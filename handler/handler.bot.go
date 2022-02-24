@@ -277,6 +277,7 @@ func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID interface{}
 		disableNotification = optionals.DisableNotification
 		replyToMessageID = optionals.ReplyToMessageID
 		allowSendingWithoutReply = optionals.AllowSendingWithoutReply
+		replyMarkup = optionals.ReplyMarkup
 	}
 
 	/* ---------------------------- Logging ---------------------------- */
@@ -330,6 +331,339 @@ func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID interface{}
 
 	/* ---------------------------- Logging ---------------------------- */
 	handler.Logging(fmt.Sprintf("Finished sending document to telegram chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// SendVideoToTelegramChat sends a video files to the Telegram chat identified by its chat ID
+/* Available Optional Values */
+/* Duration                    int64 */
+/* Width                       int64 */
+/* Height                      int64 */
+/* Thumb                       string */
+/* Caption                     string */
+/* ParseMode                   string */
+/* CaptionEntities             []MessageEntity */
+/* DisableContentTypeDetection bool */
+/* DisableNotification         bool */
+/* ReplyToMessageID            int64 */
+/* ProtectContent              bool */
+/* AllowSendingWithoutReply    bool */
+/* ReplyMarkup                 string */
+func (handler *TelegramBotHandler) SendVideoToTelegramChat(chatID interface{}, video string,
+	optionals *entity.Optional) (*entity.BotResponse, error) {
+
+	caption := ""
+	replyMarkup := ""
+	parseMode := ""
+	thumb := ""
+	captionEntities := ""
+	chatIDS := ""
+
+	var duration int64
+	var width int64
+	var height int64
+	var disableContentTypeDetection bool
+	var disableNotification bool
+	var replyToMessageID int64
+	var allowSendingWithoutReply bool
+	var protectContent bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals are nil then set the default mode
+	if optionals == nil {
+		parseMode = "html"
+	} else {
+		if len(optionals.CaptionEntities) > 0 {
+			captionEntitiesByte, _ := json.Marshal(optionals.CaptionEntities)
+			captionEntities = string(captionEntitiesByte)
+		}
+
+		duration = optionals.Duration
+		width = optionals.Width
+		height = optionals.Height
+		thumb = optionals.Thumb
+		caption = optionals.Caption
+		parseMode = optionals.ParseMode
+		disableContentTypeDetection = optionals.DisableContentTypeDetection
+		disableNotification = optionals.DisableNotification
+		replyToMessageID = optionals.ReplyToMessageID
+		protectContent = optionals.ProtectContent
+		allowSendingWithoutReply = optionals.AllowSendingWithoutReply
+		replyMarkup = optionals.ReplyMarkup
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started sending video to telegram chat { Chat ID : %s, Video : %s, "+
+		"Duration : %d, Width : %d, Height: %d, Thumb : %s, Caption : %s, Parse Mode : %s, Caption Entities : %s, "+
+		"Disable Content Type Detection : %v, Disable Notification : %v, Reply To Message ID : %d, "+
+		"Protect Content : %v, Allow Sending Without Reply : %v, Reply Markup : %s }",
+		chatIDS, video, duration, width, height, thumb, caption, parseMode, captionEntities,
+		disableContentTypeDetection, disableNotification, replyToMessageID, protectContent,
+		allowSendingWithoutReply, replyMarkup), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/sendVideo"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":                        {chatIDS},
+			"video":                          {video},
+			"duration":                       {strconv.FormatInt(duration, 10)},
+			"width":                          {strconv.FormatInt(width, 10)},
+			"height":                         {strconv.FormatInt(height, 10)},
+			"thumb":                          {thumb},
+			"caption":                        {caption},
+			"parse_mode":                     {parseMode},
+			"caption_entities":               {captionEntities},
+			"disable_content_type_detection": {strconv.FormatBool(disableContentTypeDetection)},
+			"disable_notification":           {strconv.FormatBool(disableNotification)},
+			"protect_content":                {strconv.FormatBool(protectContent)},
+			"reply_to_message_id":            {strconv.FormatInt(replyToMessageID, 10)},
+			"allow_sending_without_reply":    {strconv.FormatBool(allowSendingWithoutReply)},
+			"reply_markup":                   {replyMarkup},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending video to telegram chat { Chat ID : %s, Video : %s, "+
+			"Duration : %d, Width : %d, Height: %d, Thumb : %s, Caption : %s, Parse Mode : %s, Caption Entities : %s, "+
+			"Disable Content Type Detection : %v, Disable Notification : %v, Reply To Message ID : %d, "+
+			"Protect Content : %v, Allow Sending Without Reply : %v, Reply Markup : %s }, %s",
+			chatIDS, video, duration, width, height, thumb, caption, parseMode, captionEntities,
+			disableContentTypeDetection, disableNotification, replyToMessageID, protectContent,
+			allowSendingWithoutReply, replyMarkup, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.BotResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending video to telegram chat, unable to parse response "+
+			"{ Chat ID : %s, Video : %s, Duration : %d, Width : %d, Height: %d, Thumb : %s, Caption : %s, "+
+			"Parse Mode : %s, Caption Entities : %s, Disable Content Type Detection : %v, Disable Notification : %v, "+
+			"Reply To Message ID : %d, Protect Content : %v, Allow Sending Without Reply : %v, Reply Markup : %s }, %s",
+			chatIDS, video, duration, width, height, thumb, caption, parseMode, captionEntities,
+			disableContentTypeDetection, disableNotification, replyToMessageID, protectContent,
+			allowSendingWithoutReply, replyMarkup, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished sending video to telegram chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// SendAnimationToTelegramChat sends a animation files to the Telegram chat identified by its chat ID
+/* Available Optional Values */
+/* Duration                    int64 */
+/* Width                       int64 */
+/* Height                      int64 */
+/* Thumb                       string */
+/* Caption                     string */
+/* ParseMode                   string */
+/* CaptionEntities             []MessageEntity */
+/* DisableContentTypeDetection bool */
+/* DisableNotification         bool */
+/* ReplyToMessageID            int64 */
+/* ProtectContent              bool */
+/* AllowSendingWithoutReply    bool */
+/* ReplyMarkup                 string */
+func (handler *TelegramBotHandler) SendAnimationToTelegramChat(chatID interface{}, animation string,
+	optionals *entity.Optional) (*entity.BotResponse, error) {
+
+	caption := ""
+	replyMarkup := ""
+	parseMode := ""
+	thumb := ""
+	captionEntities := ""
+	chatIDS := ""
+
+	var duration int64
+	var width int64
+	var height int64
+	var disableContentTypeDetection bool
+	var disableNotification bool
+	var replyToMessageID int64
+	var allowSendingWithoutReply bool
+	var protectContent bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals are nil then set the default mode
+	if optionals == nil {
+		parseMode = "html"
+	} else {
+		if len(optionals.CaptionEntities) > 0 {
+			captionEntitiesByte, _ := json.Marshal(optionals.CaptionEntities)
+			captionEntities = string(captionEntitiesByte)
+		}
+
+		duration = optionals.Duration
+		width = optionals.Width
+		height = optionals.Height
+		thumb = optionals.Thumb
+		caption = optionals.Caption
+		parseMode = optionals.ParseMode
+		disableContentTypeDetection = optionals.DisableContentTypeDetection
+		disableNotification = optionals.DisableNotification
+		replyToMessageID = optionals.ReplyToMessageID
+		protectContent = optionals.ProtectContent
+		allowSendingWithoutReply = optionals.AllowSendingWithoutReply
+		replyMarkup = optionals.ReplyMarkup
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started sending animation to telegram chat { Chat ID : %s, Animation : %s, "+
+		"Duration : %d, Width : %d, Height: %d, Thumb : %s, Caption : %s, Parse Mode : %s, Caption Entities : %s, "+
+		"Disable Content Type Detection : %v, Disable Notification : %v, Reply To Message ID : %d, "+
+		"Protect Content : %v, Allow Sending Without Reply : %v, Reply Markup : %s }",
+		chatIDS, animation, duration, width, height, thumb, caption, parseMode, captionEntities,
+		disableContentTypeDetection, disableNotification, replyToMessageID, protectContent,
+		allowSendingWithoutReply, replyMarkup), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/sendAnimation"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":                        {chatIDS},
+			"animation":                      {animation},
+			"duration":                       {strconv.FormatInt(duration, 10)},
+			"width":                          {strconv.FormatInt(width, 10)},
+			"height":                         {strconv.FormatInt(height, 10)},
+			"thumb":                          {thumb},
+			"caption":                        {caption},
+			"parse_mode":                     {parseMode},
+			"caption_entities":               {captionEntities},
+			"disable_content_type_detection": {strconv.FormatBool(disableContentTypeDetection)},
+			"disable_notification":           {strconv.FormatBool(disableNotification)},
+			"protect_content":                {strconv.FormatBool(protectContent)},
+			"reply_to_message_id":            {strconv.FormatInt(replyToMessageID, 10)},
+			"allow_sending_without_reply":    {strconv.FormatBool(allowSendingWithoutReply)},
+			"reply_markup":                   {replyMarkup},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending animation to telegram chat { Chat ID : %s, Animation : %s, "+
+			"Duration : %d, Width : %d, Height: %d, Thumb : %s, Caption : %s, Parse Mode : %s, Caption Entities : %s, "+
+			"Disable Content Type Detection : %v, Disable Notification : %v, Reply To Message ID : %d, "+
+			"Protect Content : %v, Allow Sending Without Reply : %v, Reply Markup : %s }, %s",
+			chatIDS, animation, duration, width, height, thumb, caption, parseMode, captionEntities,
+			disableContentTypeDetection, disableNotification, replyToMessageID, protectContent,
+			allowSendingWithoutReply, replyMarkup, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.BotResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For sending animation to telegram chat, unable to parse response "+
+			"{ Chat ID : %s, Animation : %s, Duration : %d, Width : %d, Height: %d, Thumb : %s, Caption : %s, "+
+			"Parse Mode : %s, Caption Entities : %s, Disable Content Type Detection : %v, Disable Notification : %v, "+
+			"Reply To Message ID : %d, Protect Content : %v, Allow Sending Without Reply : %v, Reply Markup : %s }, %s",
+			chatIDS, animation, duration, width, height, thumb, caption, parseMode, captionEntities,
+			disableContentTypeDetection, disableNotification, replyToMessageID, protectContent,
+			allowSendingWithoutReply, replyMarkup, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished sending animation to telegram chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// EditMediaToTelegramChat edits a reply sent to the Telegram chat identified by its (chat ID and message ID) or inline message id
+/* Only text is required because (chat ID and message ID) or inline message id are interchangable, if one is available it works */
+/* Available Optional Values */
+/* ChatID                   interface{} */
+/* MessageID                int64 */
+/* InlineMessageID          string */
+/* ReplyMarkup              string */
+func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
+	optionals *entity.Optional) (*entity.BotResponse, error) {
+
+	chatID := ""
+	messageID := optionals.MessageID
+	inlineMessageID := optionals.InlineMessageID
+	replyMarkup := optionals.ReplyMarkup
+
+	if id, ok := optionals.ChatID.(int64); ok {
+		chatID = strconv.FormatInt(id, 10)
+	} else if id, ok := optionals.ChatID.(string); ok {
+		chatID = id
+	} else if optionals.ChatID == nil {
+		// Since chatID can be empty
+		chatID = ""
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started editing media reply sent to telegram chat { Chat ID : %s, Message ID : %d, "+
+		"Inline Message ID : %s, Media : %s, Reply Markup : %s }", chatID, messageID, inlineMessageID, media,
+		replyMarkup), log.BotLogFile)
+
+	mediaByte, _ := json.MarshalIndent(media, "", "	")
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/editMessageMedia"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":           {chatID},
+			"message_id":        {strconv.FormatInt(messageID, 10)},
+			"inline_message_id": {inlineMessageID},
+			"media":             {string(mediaByte)},
+			"reply_markup":      {replyMarkup},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For editing media reply sent to telegram chat { Chat ID : %s, Message ID : %d, "+
+			"Inline Message ID : %s, Media : %s, Reply Markup : %s }, %s", chatID, messageID, inlineMessageID, media,
+			replyMarkup, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.BotResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For editing media reply sent to telegram chat, unable to parse response "+
+			"{ Chat ID : %s, Message ID : %d, Inline Message ID : %s, Media : %s, Reply Markup : %s }, %s",
+			chatID, messageID, inlineMessageID, media, replyMarkup, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished editing media reply sent to telegram chat, Bot Response => %s",
 		botResponse.ToString()), log.BotLogFile)
 
 	return botResponse, nil
