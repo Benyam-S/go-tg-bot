@@ -24,7 +24,7 @@ import (
 /* AllowSendingWithoutReply bool */
 /* ReplyMarkup              string */
 func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID interface{}, text string,
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	chatIDS := ""
 	parseMode := ""
@@ -102,7 +102,7 @@ func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID interface{}, t
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
@@ -133,7 +133,7 @@ func (handler *TelegramBotHandler) SendReplyToTelegramChat(chatID interface{}, t
 /* DisableWebPageView       bool */
 /* ReplyMarkup              string */
 func (handler *TelegramBotHandler) EditReplyToTelegramChat(text string,
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	chatID := ""
 	parseMode := ""
@@ -208,7 +208,7 @@ func (handler *TelegramBotHandler) EditReplyToTelegramChat(text string,
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
@@ -239,7 +239,7 @@ func (handler *TelegramBotHandler) EditReplyToTelegramChat(text string,
 /* AllowSendingWithoutReply    bool */
 /* ReplyMarkup                 string */
 func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID interface{}, fileID string,
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	caption := ""
 	replyMarkup := ""
@@ -316,7 +316,7 @@ func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID interface{}
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
@@ -352,7 +352,7 @@ func (handler *TelegramBotHandler) SendDocumentToTelegramChat(chatID interface{}
 /* AllowSendingWithoutReply    bool */
 /* ReplyMarkup                 string */
 func (handler *TelegramBotHandler) SendVideoToTelegramChat(chatID interface{}, video string,
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	caption := ""
 	replyMarkup := ""
@@ -445,7 +445,7 @@ func (handler *TelegramBotHandler) SendVideoToTelegramChat(chatID interface{}, v
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
@@ -483,7 +483,7 @@ func (handler *TelegramBotHandler) SendVideoToTelegramChat(chatID interface{}, v
 /* AllowSendingWithoutReply    bool */
 /* ReplyMarkup                 string */
 func (handler *TelegramBotHandler) SendAnimationToTelegramChat(chatID interface{}, animation string,
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	caption := ""
 	replyMarkup := ""
@@ -576,7 +576,7 @@ func (handler *TelegramBotHandler) SendAnimationToTelegramChat(chatID interface{
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
@@ -606,7 +606,7 @@ func (handler *TelegramBotHandler) SendAnimationToTelegramChat(chatID interface{
 /* InlineMessageID          string */
 /* ReplyMarkup              string */
 func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	chatID := ""
 	messageID := optionals.MessageID
@@ -651,7 +651,7 @@ func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
@@ -669,6 +669,78 @@ func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
 	return botResponse, nil
 }
 
+// GetChatMembers gets information about a member of a chat. Returns a ChatMember object on success.
+func (handler *TelegramBotHandler) GetChatMembers(chatID string, userID int64) (*entity.ChatMemberResponse, error) {
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started getting chat members { Chat ID : %s, User ID : %d }", chatID, userID),
+		log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChatMember?" +
+		fmt.Sprintf("chat_id=%s&user_id=%d", chatID, userID)
+	response, err := http.Get(telegramAPI)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For getting chat members { Chat ID : %s, User ID : %d }, %s",
+			chatID, userID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatMemberResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For getting chat members, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d }, %s", chatID, userID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished getting chat members, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// GetChatAdministrators gets a list of administrators in a chat
+func (handler *TelegramBotHandler) GetChatAdministrators(chatID string) (*entity.ChatMembersResponse, error) {
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started getting chat administrators { Chat ID : %s }", chatID),
+		log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChatAdministrators?" +
+		fmt.Sprintf("chat_id = %s", chatID)
+	response, err := http.Get(telegramAPI)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For getting chat administrators { Chat ID : %s }, %s",
+			chatID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatMembersResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For getting chat administrators, unable to parse response "+
+			"{ Chat ID : %s }, %s", chatID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished getting chat administrators, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
 // AnswerToTelegramCallBack sends a reply to the Telegram call back request identified by the query id
 /* Available Optional Values */
 /* Text                     string */
@@ -676,7 +748,7 @@ func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
 /* ShowAlert                bool */
 /* CacheTime                int64 */
 func (handler *TelegramBotHandler) AnswerToTelegramCallBack(queryID string,
-	optionals *entity.Optional) (*entity.BotResponse, error) {
+	optionals *entity.Optional) (*entity.MessageResponse, error) {
 
 	text := ""
 	callbackUrl := ""
@@ -717,7 +789,7 @@ func (handler *TelegramBotHandler) AnswerToTelegramCallBack(queryID string,
 	}
 	defer response.Body.Close()
 
-	botResponse := new(entity.BotResponse)
+	botResponse := new(entity.MessageResponse)
 	err = json.NewDecoder(response.Body).Decode(botResponse)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */

@@ -90,12 +90,28 @@ type CallbackQuery struct {
 	GameShortName   string  `json:"game_short_name"`
 }
 
-// BotResponse is a response from a telegram bot after performing certain action like sending or editing message
-type BotResponse struct {
+// MessageResponse is a response from a telegram bot after performing certain action like sending or editing message
+type MessageResponse struct {
 	Ok          bool    `json:"ok"`
 	Result      Message `json:"result"`
 	ErrorCode   int64   `json:"error_code"`
 	Description string  `json:"description"`
+}
+
+// ChatMemberResponse is a response from a telegram bot after performing certain action like getting chat member
+type ChatMemberResponse struct {
+	Ok          bool       `json:"ok"`
+	Result      ChatMember `json:"result"`
+	ErrorCode   int64      `json:"error_code"`
+	Description string     `json:"description"`
+}
+
+// ChatMembersResponse is a response from a telegram bot after performing certain action like getting chat administrators
+type ChatMembersResponse struct {
+	Ok          bool         `json:"ok"`
+	Result      []ChatMember `json:"result"`
+	ErrorCode   int64        `json:"error_code"`
+	Description string       `json:"description"`
 }
 
 // Chat indicates the conversation to which the message belongs.
@@ -130,6 +146,36 @@ type User struct {
 	CanJoinGroups           bool   `json:"can_join_groups"`
 	CanReadAllGroupMessages bool   `json:"can_read_all_group_messages"`
 	SupportsInlineQueries   bool   `json:"supports_inline_queries"`
+}
+
+type ChatMember struct {
+	// ChatMemberOwner
+	Status      string `json:"status"`
+	User        User   `json:"user"`
+	IsAnonymous bool   `json:"is_anonymous"`
+	CustomTitle string `json:"custom_title"`
+
+	// ChatMemberAdministrator
+	CanBeEdited         bool `json:"can_be_edited"`
+	CanMangeChat        bool `json:"can_manage_chat"`
+	CanDeleteMessages   bool `json:"can_delete_messages"`
+	CanManageVoiceChats bool `json:"can_manage_voice_chats"`
+	CanRestrictMembers  bool `json:"can_restrict_members"`
+	CanPromoteMembers   bool `json:"can_promote_members"`
+	CanChangeInfo       bool `json:"can_change_info"`
+	CanInviteUsers      bool `json:"can_invite_users"`
+	CanPostMessages     bool `json:"can_post_messages"`
+	CanEditMessages     bool `json:"can_edit_messages"`
+	CanPinMessages      bool `json:"can_pin_messages"`
+
+	// ChatMemberRestricted
+	IsMember             bool  `json:"is_member"`
+	CanSendMessages      bool  `json:"can_send_messages"`
+	CanSendMediaMessages bool  `json:"can_send_media_messages"`
+	CanSendPolls         bool  `json:"can_send_polls"`
+	CanSendOtherMessages bool  `json:"can_send_other_messages"`
+	CanAddWePagePreviews bool  `json:"can_add_web_page_previews"`
+	UntilDate            int64 `json:"until_date"`
 }
 
 // Document is a Telegram document object
