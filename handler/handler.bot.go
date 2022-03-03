@@ -669,6 +669,39 @@ func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
 	return botResponse, nil
 }
 
+// GetChat gets  up to date information about the chat. Returns a Chat object on success.
+func (handler *TelegramBotHandler) GetChat(chatID string) (*entity.ChatResponse, error) {
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started getting chat { Chat ID : %s }", chatID), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChat?chat_id=" + chatID
+	response, err := http.Get(telegramAPI)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For getting chat { Chat ID : %s }, %s",
+			chatID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For getting chat, unable to parse response "+
+			"{ Chat ID : %s }, %s", chatID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished getting chat, Bot Response => %s", botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
 // GetChatMembers gets information about a member of a chat. Returns a ChatMember object on success.
 func (handler *TelegramBotHandler) GetChatMembers(chatID string, userID int64) (*entity.ChatMemberResponse, error) {
 

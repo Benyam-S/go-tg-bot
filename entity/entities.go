@@ -98,6 +98,14 @@ type MessageResponse struct {
 	Description string  `json:"description"`
 }
 
+// ChatResponse is a response from a telegram bot after performing certain action like getting chat
+type ChatResponse struct {
+	Ok          bool   `json:"ok"`
+	Result      Chat   `json:"result"`
+	ErrorCode   int64  `json:"error_code"`
+	Description string `json:"description"`
+}
+
 // ChatMemberResponse is a response from a telegram bot after performing certain action like getting chat member
 type ChatMemberResponse struct {
 	Ok          bool       `json:"ok"`
