@@ -13,14 +13,13 @@ type TelegramBotHandler struct {
 	BotID             int64
 	BotUsername       string
 	BotURL            string
-	ChannelName       string
 	logger            log.ILogger
 	logs              *log.LogContainer // logs can never be nil
 }
 
 // NewTelegramBotHandler is a function that returns a new telegram bot handler
 func NewTelegramBotHandler(botAPIAccessPoint string, botAccessToken string, botID int64, botUsername string,
-	telegramChannelName string, botLogger log.ILogger, botLogs *log.LogContainer) *TelegramBotHandler {
+	botLogger log.ILogger, botLogs *log.LogContainer) *TelegramBotHandler {
 
 	var botURL string
 
@@ -35,8 +34,7 @@ func NewTelegramBotHandler(botAPIAccessPoint string, botAccessToken string, botI
 	}
 
 	return &TelegramBotHandler{BotAPIAccessPoint: botAPIAccessPoint, BotAccessToken: botAccessToken,
-		BotID: botID, BotURL: botURL, BotUsername: botUsername, ChannelName: telegramChannelName,
-		logger: botLogger, logs: botLogs}
+		BotID: botID, BotURL: botURL, BotUsername: botUsername, logger: botLogger, logs: botLogs}
 }
 
 // Logging is a method that will be internally used for making logging efficient

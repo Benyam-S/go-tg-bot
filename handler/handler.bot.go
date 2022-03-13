@@ -670,17 +670,26 @@ func (handler *TelegramBotHandler) EditMediaToTelegramChat(media interface{},
 }
 
 // GetChat gets  up to date information about the chat. Returns a Chat object on success.
-func (handler *TelegramBotHandler) GetChat(chatID string) (*entity.ChatResponse, error) {
+func (handler *TelegramBotHandler) GetChat(chatID interface{}) (*entity.ChatResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
 
 	/* ---------------------------- Logging ---------------------------- */
-	handler.Logging(fmt.Sprintf("Started getting chat { Chat ID : %s }", chatID), log.BotLogFile)
+	handler.Logging(fmt.Sprintf("Started getting chat { Chat ID : %s }", chatIDS), log.BotLogFile)
 
-	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChat?chat_id=" + chatID
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChat?chat_id=" + chatIDS
 	response, err := http.Get(telegramAPI)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
 		handler.Logging(fmt.Sprintf("Error: For getting chat { Chat ID : %s }, %s",
-			chatID, err.Error()), log.ErrorLogFile)
+			chatIDS, err.Error()), log.ErrorLogFile)
 
 		return nil, err
 	}
@@ -691,7 +700,7 @@ func (handler *TelegramBotHandler) GetChat(chatID string) (*entity.ChatResponse,
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
 		handler.Logging(fmt.Sprintf("Error: For getting chat, unable to parse response "+
-			"{ Chat ID : %s }, %s", chatID, err.Error()), log.ErrorLogFile)
+			"{ Chat ID : %s }, %s", chatIDS, err.Error()), log.ErrorLogFile)
 
 		return nil, err
 	}
@@ -703,19 +712,28 @@ func (handler *TelegramBotHandler) GetChat(chatID string) (*entity.ChatResponse,
 }
 
 // GetChatMembers gets information about a member of a chat. Returns a ChatMember object on success.
-func (handler *TelegramBotHandler) GetChatMembers(chatID string, userID int64) (*entity.ChatMemberResponse, error) {
+func (handler *TelegramBotHandler) GetChatMembers(chatID interface{}, userID int64) (*entity.ChatMemberResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
 
 	/* ---------------------------- Logging ---------------------------- */
-	handler.Logging(fmt.Sprintf("Started getting chat members { Chat ID : %s, User ID : %d }", chatID, userID),
+	handler.Logging(fmt.Sprintf("Started getting chat members { Chat ID : %s, User ID : %d }", chatIDS, userID),
 		log.BotLogFile)
 
 	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChatMember?" +
-		fmt.Sprintf("chat_id=%s&user_id=%d", chatID, userID)
+		fmt.Sprintf("chat_id=%s&user_id=%d", chatIDS, userID)
 	response, err := http.Get(telegramAPI)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
 		handler.Logging(fmt.Sprintf("Error: For getting chat members { Chat ID : %s, User ID : %d }, %s",
-			chatID, userID, err.Error()), log.ErrorLogFile)
+			chatIDS, userID, err.Error()), log.ErrorLogFile)
 
 		return nil, err
 	}
@@ -726,7 +744,7 @@ func (handler *TelegramBotHandler) GetChatMembers(chatID string, userID int64) (
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
 		handler.Logging(fmt.Sprintf("Error: For getting chat members, unable to parse response "+
-			"{ Chat ID : %s, User ID : %d }, %s", chatID, userID, err.Error()), log.ErrorLogFile)
+			"{ Chat ID : %s, User ID : %d }, %s", chatIDS, userID, err.Error()), log.ErrorLogFile)
 
 		return nil, err
 	}
@@ -739,19 +757,28 @@ func (handler *TelegramBotHandler) GetChatMembers(chatID string, userID int64) (
 }
 
 // GetChatAdministrators gets a list of administrators in a chat
-func (handler *TelegramBotHandler) GetChatAdministrators(chatID string) (*entity.ChatMembersResponse, error) {
+func (handler *TelegramBotHandler) GetChatAdministrators(chatID interface{}) (*entity.ChatMembersResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
 
 	/* ---------------------------- Logging ---------------------------- */
-	handler.Logging(fmt.Sprintf("Started getting chat administrators { Chat ID : %s }", chatID),
+	handler.Logging(fmt.Sprintf("Started getting chat administrators { Chat ID : %s }", chatIDS),
 		log.BotLogFile)
 
 	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/getChatAdministrators?" +
-		fmt.Sprintf("chat_id = %s", chatID)
+		fmt.Sprintf("chat_id = %s", chatIDS)
 	response, err := http.Get(telegramAPI)
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
 		handler.Logging(fmt.Sprintf("Error: For getting chat administrators { Chat ID : %s }, %s",
-			chatID, err.Error()), log.ErrorLogFile)
+			chatIDS, err.Error()), log.ErrorLogFile)
 
 		return nil, err
 	}
@@ -762,13 +789,368 @@ func (handler *TelegramBotHandler) GetChatAdministrators(chatID string) (*entity
 	if err != nil {
 		/* ---------------------------- Logging ---------------------------- */
 		handler.Logging(fmt.Sprintf("Error: For getting chat administrators, unable to parse response "+
-			"{ Chat ID : %s }, %s", chatID, err.Error()), log.ErrorLogFile)
+			"{ Chat ID : %s }, %s", chatIDS, err.Error()), log.ErrorLogFile)
 
 		return nil, err
 	}
 
 	/* ---------------------------- Logging ---------------------------- */
 	handler.Logging(fmt.Sprintf("Finished getting chat administrators, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// ExportChatInviteLink generates a new primary invite link for a chat.
+func (handler *TelegramBotHandler) ExportChatInviteLink(chatID interface{}) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started exporting chat invite link { Chat ID : %s }", chatIDS), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/exportChatInviteLink"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id": {chatIDS},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For exporting chat invite link { Chat ID : %s }, %s",
+			chatIDS, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For exporting chat invite link, unable to parse response "+
+			"{ Chat ID : %s }, %s", chatIDS, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished exporting chat invite link, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// CreateChatInviteLink creates an additional invite link for a chat
+/* Available Optional Values */
+/* InviteLinkName                   string */
+/* InviteLinkExpireDate             int64 */
+/* InviteLinkMemberLimit            int64 */
+/* InviteLinkCreateJoinRequest      bool */
+func (handler *TelegramBotHandler) CreateChatInviteLink(chatID interface{},
+	optionals *entity.Optional) (*entity.ChatInviteLinkResponse, error) {
+
+	chatIDS := ""
+
+	var name string
+	var expireDate int64
+	var memberLimit int64
+	var createsJoinRequest bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals aren't nil then set the values
+	if optionals != nil {
+		name = optionals.InviteLinkName
+		expireDate = optionals.InviteLinkExpireDate
+		memberLimit = optionals.InviteLinkMemberLimit
+		createsJoinRequest = optionals.InviteLinkCreateJoinRequest
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started creating invite link to telegram chat { Chat ID : %s, Name : %s, "+
+		"Expire Date : %d, Member Limit : %d, Create Join Request: %v }",
+		chatIDS, name, expireDate, memberLimit, createsJoinRequest), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/createChatInviteLink"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":              {chatIDS},
+			"name":                 {name},
+			"expire_date":          {strconv.FormatInt(expireDate, 10)},
+			"member_limit":         {strconv.FormatInt(memberLimit, 10)},
+			"creates_join_request": {strconv.FormatBool(createsJoinRequest)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For creating invite link to telegram chat { Chat ID : %s, Name : %s, "+
+			"Expire Date : %d, Member Limit : %d, Create Join Request: %v }, %s",
+			chatIDS, name, expireDate, memberLimit, createsJoinRequest, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatInviteLinkResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For creating invite link to telegram chat, unable to parse response "+
+			"{ Chat ID : %s, Name : %s, Expire Date : %d, Member Limit : %d, Create Join Request: %v }, %s",
+			chatIDS, name, expireDate, memberLimit, createsJoinRequest, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished creating invite link to telegram chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// EditChatInviteLink edits a non-primary invite link created by the bot
+/* Available Optional Values */
+/* InviteLinkName                   string */
+/* InviteLinkExpireDate             int64 */
+/* InviteLinkMemberLimit            int64 */
+/* InviteLinkCreateJoinRequest      bool */
+func (handler *TelegramBotHandler) EditChatInviteLink(chatID interface{}, inviteLink string,
+	optionals *entity.Optional) (*entity.ChatInviteLinkResponse, error) {
+
+	chatIDS := ""
+
+	var name string
+	var expireDate int64
+	var memberLimit int64
+	var createsJoinRequest bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals aren't nil then set the values
+	if optionals != nil {
+		name = optionals.InviteLinkName
+		expireDate = optionals.InviteLinkExpireDate
+		memberLimit = optionals.InviteLinkMemberLimit
+		createsJoinRequest = optionals.InviteLinkCreateJoinRequest
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started editing invite link to telegram chat { Chat ID : %s, Invite Link : %s, "+
+		"Name : %s, Expire Date : %d, Member Limit : %d, Create Join Request: %v }",
+		chatIDS, inviteLink, name, expireDate, memberLimit, createsJoinRequest), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/editChatInviteLink"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":              {chatIDS},
+			"invite_link":          {inviteLink},
+			"name":                 {name},
+			"expire_date":          {strconv.FormatInt(expireDate, 10)},
+			"member_limit":         {strconv.FormatInt(memberLimit, 10)},
+			"creates_join_request": {strconv.FormatBool(createsJoinRequest)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For editing invite link to telegram chat { Chat ID : %s, Invite Link : %s, "+
+			"Name : %s, Expire Date : %d, Member Limit : %d, Create Join Request: %v }, %s",
+			chatIDS, inviteLink, name, expireDate, memberLimit, createsJoinRequest, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatInviteLinkResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For editing invite link to telegram chat, unable to parse response "+
+			"{ Chat ID : %s, Invite Link : %s, Name : %s, Expire Date : %d, Member Limit : %d, "+
+			"Create Join Request: %v }, %s", chatIDS, inviteLink, name, expireDate, memberLimit,
+			createsJoinRequest, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished editing invite link to telegram chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// RevokeChatInviteLink revokes an invite link created by the bot.
+func (handler *TelegramBotHandler) RevokeChatInviteLink(chatID interface{},
+	inviteLink string) (*entity.ChatInviteLinkResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started revoking invite link { Chat ID : %s, Invite Link : %s }", chatIDS, inviteLink),
+		log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/revokeChatInviteLink"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":     {chatIDS},
+			"invite_link": {inviteLink},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For revoking invite link { Chat ID : %s, Invite Link : %s }, %s",
+			chatIDS, inviteLink, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatInviteLinkResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For revoking invite link, unable to parse response "+
+			"{ Chat ID : %s, Invite Link : %s }, %s", chatIDS, inviteLink, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished revoking invite link, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// ApproveChatJoinRequest approves a chat join request.
+func (handler *TelegramBotHandler) ApproveChatJoinRequest(chatID interface{},
+	userID int64) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started approving chat join request { Chat ID : %s, User ID : %d }", chatIDS, userID),
+		log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/approveChatJoinRequest"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id": {chatIDS},
+			"user_id": {strconv.FormatInt(userID, 10)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For approving chat join request { Chat ID : %s, User ID : %d }, %s",
+			chatIDS, userID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For approving chat join request, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d }, %s", chatIDS, userID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished approving chat join request, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// DeclineChatJoinRequest declines a chat join request.
+func (handler *TelegramBotHandler) DeclineChatJoinRequest(chatID interface{},
+	userID int64) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started declining chat join request { Chat ID : %s, User ID : %d }", chatIDS, userID),
+		log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/declineChatJoinRequest"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id": {chatIDS},
+			"user_id": {strconv.FormatInt(userID, 10)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For declining chat join request { Chat ID : %s, User ID : %d }, %s",
+			chatIDS, userID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For declining chat join request, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d }, %s", chatIDS, userID, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished declining chat join request, Bot Response => %s",
 		botResponse.ToString()), log.BotLogFile)
 
 	return botResponse, nil

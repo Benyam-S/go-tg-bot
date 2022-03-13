@@ -114,6 +114,22 @@ type ChatMemberResponse struct {
 	Description string     `json:"description"`
 }
 
+// ChatInviteLinkResponse is a response from a telegram bot after creating or editing chat invite link
+type ChatInviteLinkResponse struct {
+	Ok          bool           `json:"ok"`
+	Result      ChatInviteLink `json:"result"`
+	ErrorCode   int64          `json:"error_code"`
+	Description string         `json:"description"`
+}
+
+// ChatDefaultResponse is a response from a telegram bot with no result value
+type ChatDefaultResponse struct {
+	Ok          bool        `json:"ok"`
+	Result      interface{} `json:"result"`
+	ErrorCode   int64       `json:"error_code"`
+	Description string      `json:"description"`
+}
+
 // ChatMembersResponse is a response from a telegram bot after performing certain action like getting chat administrators
 type ChatMembersResponse struct {
 	Ok          bool         `json:"ok"`
@@ -184,6 +200,18 @@ type ChatMember struct {
 	CanSendOtherMessages bool  `json:"can_send_other_messages"`
 	CanAddWePagePreviews bool  `json:"can_add_web_page_previews"`
 	UntilDate            int64 `json:"until_date"`
+}
+
+type ChatInviteLink struct {
+	InviteLink              string `json:"invite_link"`
+	Creator                 User   `json:"creator"`
+	CreatesJoinRequest      bool   `json:"creates_join_request"`
+	IsPrimary               bool   `json:"is_primary"`
+	IsRevoked               bool   `json:"is_revoked"`
+	Name                    string `json:"name"`
+	ExpireDate              int64  `json:"expire_date"`
+	MemberLimit             int64  `json:"member_limit"`
+	PendingJoinRequestCount int64  `json:"pending_join_request_count"`
 }
 
 // Document is a Telegram document object
@@ -329,6 +357,12 @@ type Optional struct {
 	Caption                     string
 	CaptionEntities             []*MessageEntity
 	DisableContentTypeDetection bool
+
+	// Invite link optional valus
+	InviteLinkName              string
+	InviteLinkExpireDate        int64
+	InviteLinkMemberLimit       int64
+	InviteLinkCreateJoinRequest bool
 }
 
 // ReplyKeyboardMarkup is a struct that represents a reply to form Telegram keyboard
