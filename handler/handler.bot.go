@@ -851,10 +851,10 @@ func (handler *TelegramBotHandler) ExportChatInviteLink(chatID interface{}) (*en
 
 // CreateChatInviteLink creates an additional invite link for a chat
 /* Available Optional Values */
-/* InviteLinkName                   string */
-/* InviteLinkExpireDate             int64 */
-/* InviteLinkMemberLimit            int64 */
-/* InviteLinkCreateJoinRequest      bool */
+/* Name                   string */
+/* ExpireDate             int64 */
+/* MemberLimit            int64 */
+/* CreateJoinRequest      bool */
 func (handler *TelegramBotHandler) CreateChatInviteLink(chatID interface{},
 	optionals *entity.Optional) (*entity.ChatInviteLinkResponse, error) {
 
@@ -875,10 +875,10 @@ func (handler *TelegramBotHandler) CreateChatInviteLink(chatID interface{},
 
 	// If optionals aren't nil then set the values
 	if optionals != nil {
-		name = optionals.InviteLinkName
-		expireDate = optionals.InviteLinkExpireDate
-		memberLimit = optionals.InviteLinkMemberLimit
-		createsJoinRequest = optionals.InviteLinkCreateJoinRequest
+		name = optionals.Name
+		expireDate = optionals.ExpireDate
+		memberLimit = optionals.MemberLimit
+		createsJoinRequest = optionals.CreateJoinRequest
 	}
 
 	/* ---------------------------- Logging ---------------------------- */
@@ -927,10 +927,10 @@ func (handler *TelegramBotHandler) CreateChatInviteLink(chatID interface{},
 
 // EditChatInviteLink edits a non-primary invite link created by the bot
 /* Available Optional Values */
-/* InviteLinkName                   string */
-/* InviteLinkExpireDate             int64 */
-/* InviteLinkMemberLimit            int64 */
-/* InviteLinkCreateJoinRequest      bool */
+/* Name                   string */
+/* ExpireDate             int64 */
+/* MemberLimit            int64 */
+/* CreateJoinRequest      bool */
 func (handler *TelegramBotHandler) EditChatInviteLink(chatID interface{}, inviteLink string,
 	optionals *entity.Optional) (*entity.ChatInviteLinkResponse, error) {
 
@@ -951,10 +951,10 @@ func (handler *TelegramBotHandler) EditChatInviteLink(chatID interface{}, invite
 
 	// If optionals aren't nil then set the values
 	if optionals != nil {
-		name = optionals.InviteLinkName
-		expireDate = optionals.InviteLinkExpireDate
-		memberLimit = optionals.InviteLinkMemberLimit
-		createsJoinRequest = optionals.InviteLinkCreateJoinRequest
+		name = optionals.Name
+		expireDate = optionals.ExpireDate
+		memberLimit = optionals.MemberLimit
+		createsJoinRequest = optionals.CreateJoinRequest
 	}
 
 	/* ---------------------------- Logging ---------------------------- */
@@ -1151,6 +1151,531 @@ func (handler *TelegramBotHandler) DeclineChatJoinRequest(chatID interface{},
 
 	/* ---------------------------- Logging ---------------------------- */
 	handler.Logging(fmt.Sprintf("Finished declining chat join request, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// BanChatMember bans a user in a group, a supergroup or a channel.
+/* Available Optional Values */
+/* UntilDate                  int64 */
+/* RevokeMessages             bool */
+func (handler *TelegramBotHandler) BanChatMember(chatID interface{}, userID int64,
+	optionals *entity.Optional) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	var untilDate int64
+	var revokeMessages bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals aren't nil then set the values
+	if optionals != nil {
+		untilDate = optionals.UntilDate
+		revokeMessages = optionals.RevokeMessages
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started banning chat member { Chat ID : %s, User ID : %d, "+
+		"Until Date : %d, Revoke Messages : %v }", chatIDS, userID, untilDate, revokeMessages), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/banChatMember"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":         {chatIDS},
+			"user_id":         {strconv.FormatInt(userID, 10)},
+			"until_date":      {strconv.FormatInt(untilDate, 10)},
+			"revoke_messages": {strconv.FormatBool(revokeMessages)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For banning chat member { Chat ID : %s, User ID : %d, Until Date : %d, "+
+			"Revoke Messages : %v }, %s", chatIDS, userID, untilDate, revokeMessages, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For banning chat member, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d, Until Date : %d, Revoke Messages : %v }, %s",
+			chatIDS, userID, untilDate, revokeMessages, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished banning chat member, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// UnBanChatMember unban a previously banned user in a supergroup or channel.
+/* Available Optional Values */
+/* OnlyIfBanned             bool */
+func (handler *TelegramBotHandler) UnbanChatMember(chatID interface{}, userID int64,
+	optionals *entity.Optional) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	var onlyIfBanned bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals aren't nil then set the values
+	if optionals != nil {
+		onlyIfBanned = optionals.OnlyIfBanned
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started unbanning chat member { Chat ID : %s, User ID : %d, Only If Banned : %v }",
+		chatIDS, userID, onlyIfBanned), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/unbanChatMember"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":        {chatIDS},
+			"user_id":        {strconv.FormatInt(userID, 10)},
+			"only_if_banned": {strconv.FormatBool(onlyIfBanned)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For unbanning chat member { Chat ID : %s, User ID : %d, Only If Banned : %v }, %s",
+			chatIDS, userID, onlyIfBanned, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For unbanning chat member, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d, Only If Banned : %v }, %s",
+			chatIDS, userID, onlyIfBanned, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished unbanning chat member, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// RestrictChatMember restricts a user in a supergroup.
+/* Available Optional Values */
+/* UntilDate                  int64 */
+func (handler *TelegramBotHandler) RestrictChatMember(chatID interface{}, userID int64, permissions *entity.ChatPermissions,
+	optionals *entity.Optional) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	var untilDate int64
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	if permissions == nil {
+		return nil, errors.New("permissions are required")
+	}
+
+	// If optionals aren't nil then set the values
+	if optionals != nil {
+		untilDate = optionals.UntilDate
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started restricting chat member { Chat ID : %s, User ID : %d, "+
+		"Until Date : %d, Permissions : %s }", chatIDS, userID, untilDate, permissions.ToString()), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/restrictChatMember"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":     {chatIDS},
+			"user_id":     {strconv.FormatInt(userID, 10)},
+			"permissions": {permissions.ToString()},
+			"until_date":  {strconv.FormatInt(untilDate, 10)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For restricting chat member { Chat ID : %s, User ID : %d, Until Date : %d, "+
+			"Permissions : %s }, %s", chatIDS, userID, untilDate, permissions.ToString(), err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For restricting chat member, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d, Until Date : %d, Permissions : %s }, %s",
+			chatIDS, userID, untilDate, permissions.ToString(), err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished restricting chat member, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// PromoteChatMember promote or demote a user in a supergroup or a channel.
+/* Available Optional Values */
+/* IsAnonymous                     bool */
+/* CanMangeChat                    bool */
+/* CanPostMessages                 bool */
+/* CanEditMessages                 bool */
+/* CanDeleteMessages               bool */
+/* CanManageVoiceChats             bool */
+/* CanRestrictMembers              bool */
+/* CanPromoteMembers               bool */
+/* CanChangeInfo                   bool */
+/* CanInviteUsers                  bool */
+/* CanPinMessages                  bool */
+func (handler *TelegramBotHandler) PromoteChatMember(chatID interface{}, userID int64,
+	optionals *entity.Optional) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	var isAnonymous bool
+	var canMangeChat bool
+	var canPostMessages bool
+	var canEditMessages bool
+	var canDeleteMessages bool
+	var canManageVoiceChats bool
+	var canRestrictMembers bool
+	var canPromoteMembers bool
+	var canChangeInfo bool
+	var canInviteUsers bool
+	var canPinMessages bool
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	// If optionals aren't nil then set the values
+	if optionals != nil {
+		isAnonymous = optionals.IsAnonymous
+		canMangeChat = optionals.CanMangeChat
+		canPostMessages = optionals.CanPostMessages
+		canEditMessages = optionals.CanEditMessages
+		canDeleteMessages = optionals.CanDeleteMessages
+		canManageVoiceChats = optionals.CanManageVoiceChats
+		canRestrictMembers = optionals.CanRestrictMembers
+		canPromoteMembers = optionals.CanPromoteMembers
+		canChangeInfo = optionals.CanChangeInfo
+		canInviteUsers = optionals.CanInviteUsers
+		canPinMessages = optionals.CanPinMessages
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started promoting chat member { Chat ID : %s, User ID : %d, "+
+		"IsAnonymous : %v, CanMangeChat : %v, CanPostMessages : %v, CanEditMessages : %v, CanDeleteMessages : %v, "+
+		"CanManageVoiceChats : %v, CanRestrictMembers : %v, CanPromoteMembers : %v, CanChangeInfo : %v, "+
+		"CanInviteUsers : %v, CanPinMessages : %v }", chatIDS, userID, isAnonymous, canMangeChat, canPostMessages,
+		canEditMessages, canDeleteMessages, canManageVoiceChats, canRestrictMembers, canPromoteMembers, canChangeInfo,
+		canInviteUsers, canPinMessages), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/promoteChatMember"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":                {chatIDS},
+			"user_id":                {strconv.FormatInt(userID, 10)},
+			"is_anonymous":           {strconv.FormatBool(isAnonymous)},
+			"can_manage_chat":        {strconv.FormatBool(canMangeChat)},
+			"can_post_messages":      {strconv.FormatBool(canPostMessages)},
+			"can_edit_messages":      {strconv.FormatBool(canEditMessages)},
+			"can_delete_messages":    {strconv.FormatBool(canDeleteMessages)},
+			"can_manage_voice_chats": {strconv.FormatBool(canManageVoiceChats)},
+			"can_restrict_members":   {strconv.FormatBool(canRestrictMembers)},
+			"can_promote_members":    {strconv.FormatBool(canPromoteMembers)},
+			"can_change_info":        {strconv.FormatBool(canChangeInfo)},
+			"can_invite_users":       {strconv.FormatBool(canInviteUsers)},
+			"can_pin_messages":       {strconv.FormatBool(canPinMessages)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For promoting chat member { Chat ID : %s, User ID : %d, "+
+			"IsAnonymous : %v, CanMangeChat : %v, CanPostMessages : %v, CanEditMessages : %v, CanDeleteMessages : %v, "+
+			"CanManageVoiceChats : %v, CanRestrictMembers : %v, CanPromoteMembers : %v, CanChangeInfo : %v, "+
+			"CanInviteUsers : %v, CanPinMessages : %v }, %s", chatIDS, userID, isAnonymous, canMangeChat, canPostMessages,
+			canEditMessages, canDeleteMessages, canManageVoiceChats, canRestrictMembers, canPromoteMembers, canChangeInfo,
+			canInviteUsers, canPinMessages, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For promoting chat member, unable to parse response { Chat ID : %s, User ID : %d, "+
+			"IsAnonymous : %v, CanMangeChat : %v, CanPostMessages : %v, CanEditMessages : %v, CanDeleteMessages : %v, "+
+			"CanManageVoiceChats : %v, CanRestrictMembers : %v, CanPromoteMembers : %v, CanChangeInfo : %v, "+
+			"CanInviteUsers : %v, CanPinMessages : %v }, %s", chatIDS, userID, isAnonymous, canMangeChat, canPostMessages,
+			canEditMessages, canDeleteMessages, canManageVoiceChats, canRestrictMembers, canPromoteMembers, canChangeInfo,
+			canInviteUsers, canPinMessages, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished promoting chat member, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// SetChatAdministratorCustomTitle sets a custom title for an administrator in a supergroup promoted by the bot.
+func (handler *TelegramBotHandler) SetChatAdministratorCustomTitle(chatID interface{}, userID int64,
+	customTitle string) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started setting chat administrator's custom title { Chat ID : %s, User ID : %d, "+
+		"Custom Title : %s }", chatIDS, userID, customTitle), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/setChatAdministratorCustomTitle"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":      {chatIDS},
+			"user_id":      {strconv.FormatInt(userID, 10)},
+			"custom_title": {customTitle},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For setting chat administrator's custom title { Chat ID : %s, User ID : %d, "+
+			"Custom Title : %s }, %s", chatIDS, userID, customTitle, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For setting chat administrator's custom title, unable to parse response "+
+			"{ Chat ID : %s, User ID : %d, Custom Title : %s }, %s", chatIDS, userID, customTitle, err.Error()),
+			log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished setting chat administrator's custom title, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// BanChatSenderChat bans a channel chat in a supergroup or a channel.
+func (handler *TelegramBotHandler) BanChatSenderChat(chatID interface{},
+	senderChatId int64) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started banning chat sender chat { Chat ID : %s, Sender Chat ID : %d }",
+		chatIDS, senderChatId), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/banChatSenderChat"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":        {chatIDS},
+			"sender_chat_id": {strconv.FormatInt(senderChatId, 10)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For banning chat sender chat { Chat ID : %s, Sender Chat ID : %d }, %s",
+			chatIDS, senderChatId, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For banning chat sender chat, unable to parse response "+
+			"{ Chat ID : %s, Sender Chat ID : %d }, %s", chatIDS, senderChatId, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished banning chat sender chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// UnbanChatSenderChat unban a previously banned channel chat in a supergroup or channel.
+func (handler *TelegramBotHandler) UnbanChatSenderChat(chatID interface{},
+	senderChatId int64) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started unbanning chat sender chat { Chat ID : %s, Sender Chat ID : %d }",
+		chatIDS, senderChatId), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/unbanChatSenderChat"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":        {chatIDS},
+			"sender_chat_id": {strconv.FormatInt(senderChatId, 10)},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For unbanning chat sender chat { Chat ID : %s, Sender Chat ID : %d }, %s",
+			chatIDS, senderChatId, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For unbanning chat sender chat, unable to parse response "+
+			"{ Chat ID : %s, Sender Chat ID : %d }, %s", chatIDS, senderChatId, err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished unbanning chat sender chat, Bot Response => %s",
+		botResponse.ToString()), log.BotLogFile)
+
+	return botResponse, nil
+}
+
+// SetChatPermissions sets default chat permissions for all members.
+func (handler *TelegramBotHandler) SetChatPermissions(chatID interface{},
+	permissions *entity.ChatPermissions) (*entity.ChatDefaultResponse, error) {
+
+	chatIDS := ""
+
+	if id, ok := chatID.(int64); ok {
+		chatIDS = strconv.FormatInt(id, 10)
+	} else if id, ok := chatID.(string); ok {
+		chatIDS = id
+	} else {
+		return nil, errors.New("chat id can only be type string or integer")
+	}
+
+	if permissions == nil {
+		return nil, errors.New("permissions are required")
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Started setting chat permissions { Chat ID : %s, Permissions : %s }",
+		chatIDS, permissions.ToString()), log.BotLogFile)
+
+	var telegramAPI string = handler.BotAPIAccessPoint + handler.BotAccessToken + "/setChatPermissions"
+	response, err := http.PostForm(
+		telegramAPI,
+		url.Values{
+			"chat_id":     {chatIDS},
+			"permissions": {permissions.ToString()},
+		})
+
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For setting chat permissions { Chat ID : %s, Permissions : %s }, %s",
+			chatIDS, permissions.ToString(), err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	botResponse := new(entity.ChatDefaultResponse)
+	err = json.NewDecoder(response.Body).Decode(botResponse)
+	if err != nil {
+		/* ---------------------------- Logging ---------------------------- */
+		handler.Logging(fmt.Sprintf("Error: For setting chat permissions, unable to parse response "+
+			"{ Chat ID : %s, Permissions : %s }, %s", chatIDS, permissions.ToString(), err.Error()), log.ErrorLogFile)
+
+		return nil, err
+	}
+
+	/* ---------------------------- Logging ---------------------------- */
+	handler.Logging(fmt.Sprintf("Finished setting chat permissions, Bot Response => %s",
 		botResponse.ToString()), log.BotLogFile)
 
 	return botResponse, nil
